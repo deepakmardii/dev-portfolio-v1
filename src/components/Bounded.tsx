@@ -1,7 +1,8 @@
+import clsx from "clsx";
 import React from "react";
 
 type BoundedProps = {
-    as?: React.ReactElement;
+    as?: React.ElementType;
     className?: String;
     children: React.ReactNode
 }
@@ -11,7 +12,7 @@ const Bounded = React.forwardRef<HTMLDivElement, BoundedProps>(
     return (
       <Comp
         ref={ref}
-        className={"px-4 py-10 md:px-6 md:py-14 lg:py-16"}
+        className={clsx("px-4 py-10 md:px-6 md:py-14 lg:py-16",className)}
         {...restProps}
       >
         <div className="mx-auto w-full max-w-7xl">{children}</div>
