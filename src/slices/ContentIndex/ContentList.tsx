@@ -1,7 +1,7 @@
 "use client";
-import { Content, isFilled } from "@prismicio/client";
+import { Content, asImageSrc, isFilled } from "@prismicio/client";
 import Link from "next/link";
-import React from "react";
+import React, { useRef, useState } from "react";
 import { MdArrowOutward } from "react-icons/md";
 
 type ContentListProps = {
@@ -17,15 +17,39 @@ export default function ContentList({
   fallbackItemImage,
   viewMoreText = "Read More",
 }: ContentListProps) {
+  const component = useRef(null);
+  const [currentItem, setCurrentItem] = useState<null | number>(null);
+
   const urlPrefix = contentType === "Blog" ? "/blog" : "/project";
 
+  const contentImages = items.map((item) => {
+    const image = isFilled.image(item.data.hover_image)
+      ? item.data.hover_image
+      : fallbackItemImage;
+    return asImageSrc(image, {
+      fit: "crop",
+      w: 220,
+      h: 320,
+      exp: -10,
+    });
+  });
+
+  const onMouseEnter = (index: number) => {
+    setCurrentItem(index);
+    // if (!hovering) setHovering(true);
+  };
+
+  const onMouseLeave = () => {
+    // setHovering(false);
+    setCurrentItem(null);
+  };
   return (
-    <div>
-      <ul className="grid border-b border-b-slate-100">
+    <div ref={component}>
+      <ul className="grid border-b border-b-slate-100" onMouseLeave={onMouseLeave}>
         {items.map((item, index) => (
           <>
             {isFilled.keyText(item.data.title) && (
-              <li className="list-item opacity-0f">
+              <li className="list-item opacity-0f" onMouseEnter={()=>onMouseEnter(index)}>
                 <Link
                   href={urlPrefix + "/" + item.uid}
                   className="flex flex-col justify-between border-t border-t-slate-100 py-10  text-slate-200 md:flex-row "
@@ -48,6 +72,17 @@ export default function ContentList({
           </>
         ))}
       </ul>
+
+      {/* Hover */}
+
+      <div
+        className="hover-reveal pointer-events-none absolute left-0 top-0 -z-10 h-[320px] w-[220px] rounded-lg bg-cover bg-center opacity-0 transition-[background] duration-300"
+        style={{
+          backgroundImage:
+            currentItem !== null ? `url(${contentImages[currentItem]})` : "",
+        }}
+        // ref={revealRef}
+      ></div>
     </div>
   );
 }
