@@ -151,7 +151,7 @@ function DesktopMenu({
       ))}
       <li>
         <Button
-          linkField={settings.data.cta_link}
+          linkField={settings.data.github}
           label={settings.data.cta_lable}
           className="ml-3"
         />
