@@ -133,7 +133,7 @@ export default function ContentList({
             <>
               {isFilled.keyText(item.data.title) && (
                 <li
-                  className="list-item opacity-0f"
+                  className="list-item opacity-0"
                   onMouseEnter={() => onMouseEnter(index)}
                   ref={(el)=>(itemsRef.current[index]=el)}
                 >
