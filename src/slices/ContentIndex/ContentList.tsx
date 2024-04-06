@@ -1,9 +1,12 @@
 "use client";
 import { Content, asImageSrc, isFilled } from "@prismicio/client";
-import {gsap} from "gsap";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import { MdArrowOutward } from "react-icons/md";
+
+gsap.registerPlugin(ScrollTrigger);
 
 type ContentListProps = {
   items: Content.BlogPostDocument[] | Content.ProjectDocument[];
@@ -19,13 +22,42 @@ export default function ContentList({
   viewMoreText = "Read More",
 }: ContentListProps) {
   const component = useRef(null);
-
+  const itemsRef = useRef<Array<HTMLLIElement | null>>([]);
   const revealRef = useRef(null);
+
   const [currentItem, setCurrentItem] = useState<null | number>(null);
-  const [hovering, setHovering] = useState(false);
   const lastMousePos = useRef({ x: 0, y: 0 });
 
   const urlPrefix = contentType === "Blog" ? "/blog" : "/project";
+
+  useEffect(() => {
+    // Animate list-items in with a stagger
+    let ctx = gsap.context(() => {
+      itemsRef.current.forEach((item, index) => {
+        gsap.fromTo(
+          item,
+          {
+            opacity: 0,
+            y: 20,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1.3,
+            ease: "elastic.out(1,0.3)",
+            scrollTrigger: {
+              trigger: item,
+              start: "top bottom-=100px",
+              end: "bottom center",
+              toggleActions: "play none none none",
+            },
+          },
+        );
+      });
+
+      return () => ctx.revert(); // cleanup!
+    }, component);
+  }, []);
 
   useEffect(() => {
     // Mouse move event listener
@@ -46,9 +78,8 @@ export default function ContentList({
             rotation: speed * (mousePos.x > lastMousePos.current.x ? 1 : -1), // Apply rotation based on speed and direction
             ease: "back.out(2)",
             duration: 1.3,
-            opacity:1
+            opacity: 1,
           });
-         
         }
         lastMousePos.current = mousePos;
         return () => ctx.revert(); // cleanup!
@@ -74,6 +105,14 @@ export default function ContentList({
     });
   });
 
+  useEffect(() => {
+    contentImages.forEach((url) => {
+      if (!url) return;
+      const img = new Image();
+      img.src = url;
+    });
+  }, [contentImages]);
+
   const onMouseEnter = (index: number) => {
     setCurrentItem(index);
     // if (!hovering) setHovering(true);
@@ -85,32 +124,41 @@ export default function ContentList({
   };
   return (
     <div ref={component}>
-      <ul className="grid border-b border-b-slate-100" onMouseLeave={onMouseLeave}>
-        {items.map((item, index) => (
-          <>
-            {isFilled.keyText(item.data.title) && (
-              <li className="list-item opacity-0f" onMouseEnter={()=>onMouseEnter(index)}>
-                <Link
-                  href={urlPrefix + "/" + item.uid}
-                  className="flex flex-col justify-between border-t border-t-slate-100 py-10  text-slate-200 md:flex-row "
-                  aria-label={item.data.title}
+      <ul
+        className="grid border-b border-b-slate-100"
+        onMouseLeave={onMouseLeave}
+      >
+        {items.map(
+          (item, index) => (
+            <>
+              {isFilled.keyText(item.data.title) && (
+                <li
+                  className="list-item opacity-0f"
+                  onMouseEnter={() => onMouseEnter(index)}
+                  ref={(el)=>(itemsRef.current[index]=el)}
                 >
-                  <div className="flex flex-col">
-                    <span>{item.data.title}</span>
-                    <div className="flex gap-3 text-yellow-400 text-lg font-bold">
-                      {item.tags.map((tag, index) => (
-                        <span key={index}>{tag}</span>
-                      ))}
+                  <Link
+                    href={urlPrefix + "/" + item.uid}
+                    className="flex flex-col justify-between border-t border-t-slate-100 py-10  text-slate-200 md:flex-row "
+                    aria-label={item.data.title}
+                  >
+                    <div className="flex flex-col">
+                      <span>{item.data.title}</span>
+                      <div className="flex gap-3 text-yellow-400 text-lg font-bold">
+                        {item.tags.map((tag, index) => (
+                          <span key={index}>{tag}</span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <span className="ml-auto flex items-center gap-2 text-2xl font-medium md:ml-0">
-                    {viewMoreText} <MdArrowOutward />
-                  </span>
-                </Link>
-              </li>
-            )}
-          </>
-        ))}
+                    <span className="ml-auto flex items-center gap-2 text-2xl font-medium md:ml-0">
+                      {viewMoreText} <MdArrowOutward />
+                    </span>
+                  </Link>
+                </li>
+              )}
+            </>
+          )
+        )}
       </ul>
 
       {/* Hover */}
