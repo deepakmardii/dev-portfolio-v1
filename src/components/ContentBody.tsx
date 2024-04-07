@@ -37,7 +37,7 @@ export default function ContentBody({page}:{
           {formatedDate}
         </p>
         <div className="prose prose-lg prose-invert mt-12 w-full max-w-none md:mt-20 ">
-          <SliceZone slices={page.data.slices} components={components} />;
+          <SliceZone slices={page.data.slices} components={components} />
         </div>
       </div>
     </Bounded>
